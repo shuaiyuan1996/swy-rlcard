@@ -47,3 +47,8 @@ register(
     env_id='bridge',
     entry_point='rlcard.envs.bridge:BridgeEnv',
 )
+
+register(
+    env_id='swy-blm',
+    entry_point='rlcard.envs.swy_blm:SwyBlmEnv',
+)

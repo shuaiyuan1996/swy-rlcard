@@ -29,6 +29,7 @@ class DoudizhuEnv(Env):
         Args:
             state (dict): dict of original state
         '''
+        
         current_hand = _cards2array(state['current_hand'])
         others_hand = _cards2array(state['others_hand'])
 

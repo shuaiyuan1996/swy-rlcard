@@ -49,7 +49,7 @@ class DMCAgent:
         action_shape,
         mlp_layers=[512,512,512,512,512],
         exp_epsilon=0.01,
-        device="0",
+        device="0"
     ):
         self.use_raw = False
         self.device = 'cuda:'+device if device != "cpu" else "cpu"
@@ -137,7 +137,7 @@ class DMCModel:
                 action_shape[player_id],
                 mlp_layers,
                 exp_epsilon,
-                device,
+                device
             )
             self.agents.append(agent)
 

@@ -1,5 +1,8 @@
 ''' An example of training a Deep Monte-Carlo (DMC) Agent on the environments in RLCard
 '''
+import sys
+sys.path.append('/home/users/shuai/code/swy-rlcard')
+
 import os
 import argparse
 
@@ -21,9 +24,13 @@ def train(args):
         xpid=args.xpid,
         savedir=args.savedir,
         save_interval=args.save_interval,
+        total_iterations=args.total_iterations,
         num_actor_devices=args.num_actor_devices,
         num_actors=args.num_actors,
         training_device=args.training_device,
+        batch_size=32,
+        unroll_length=10,
+        mlp_layers=[256,256,256,128]
     )
 
     # Train DMC Agents
@@ -43,7 +50,8 @@ if __name__ == '__main__':
             'mahjong',
             'no-limit-holdem',
             'uno',
-            'gin-rummy'
+            'gin-rummy',
+            'swy-blm'
         ],
     )
     parser.add_argument(
@@ -71,6 +79,12 @@ if __name__ == '__main__':
         default=30,
         type=int,
         help='Time interval (in minutes) at which to save the model',
+    )
+    parser.add_argument(
+        '--total_iterations',
+        default=2000000,
+        type=int,
+        help='Total iterations',
     )
     parser.add_argument(
         '--num_actor_devices',

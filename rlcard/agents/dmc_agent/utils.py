@@ -119,7 +119,7 @@ def act(
         size = [0 for _ in range(env.num_players)]
 
         while True:
-            trajectories, payoffs = env.run(is_training=True)
+            trajectories, payoffs = env.run(is_training=True)  # run a full games
             for p in range(env.num_players):
                 size[p] += len(trajectories[p][:-1]) // 2
                 diff = size[p] - len(target_buf[p])

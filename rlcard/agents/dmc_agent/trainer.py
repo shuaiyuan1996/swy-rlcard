@@ -25,6 +25,7 @@ from torch import multiprocessing as mp
 from torch import nn
 
 from .file_writer import FileWriter
+from tensorboardX import SummaryWriter
 from .model import DMCModel
 from .pettingzoo_model import DMCModelPettingZoo
 from .utils import (
@@ -117,6 +118,7 @@ class DMCTrainer:
         num_actors=5,
         training_device="0",
         savedir='experiments/dmc_result',
+        total_iterations=1000000,
         total_frames=100000000000,
         exp_epsilon=0.01,
         batch_size=32,
@@ -127,7 +129,8 @@ class DMCTrainer:
         learning_rate=0.0001,
         alpha=0.99,
         momentum=0,
-        epsilon=0.00001
+        epsilon=0.00001,
+        mlp_layers=[512,512,512,512,512]
     ):
         self.env = env
 
@@ -135,6 +138,7 @@ class DMCTrainer:
             xpid=xpid,
             rootdir=savedir,
         )
+        self.summary_writer = SummaryWriter(os.path.join(savedir, xpid))
 
         self.checkpointpath = os.path.expandvars(
             os.path.expanduser('%s/%s/%s' % (savedir, xpid, 'model.tar')))
@@ -149,6 +153,7 @@ class DMCTrainer:
         self.num_actor_devices = num_actor_devices
         self.num_actors = num_actors
         self.training_device = training_device
+        self.total_iterations = total_iterations
         self.total_frames = total_frames
         self.exp_epsilon = exp_epsilon
         self.num_buffers = num_buffers
@@ -170,6 +175,7 @@ class DMCTrainer:
                 return DMCModel(
                     self.env.state_shape,
                     self.action_shape,
+                    mlp_layers=mlp_layers,
                     exp_epsilon=self.exp_epsilon,
                     device=str(device),
                 )
@@ -179,6 +185,7 @@ class DMCTrainer:
             def model_func(device):
                 return DMCModelPettingZoo(
                     self.env,
+                    mlp_layers=mlp_layers,
                     exp_epsilon=self.exp_epsilon,
                     device=device
                 )
@@ -194,6 +201,7 @@ class DMCTrainer:
 
     def start(self):
         # Initialize actor models
+        
         models = {}
         for device in self.device_iterator:
             model = self.model_func(device)
@@ -228,7 +236,7 @@ class DMCTrainer:
             _full_queue = [ctx.SimpleQueue() for _ in range(self.num_players)]
             free_queue[device] = _free_queue
             full_queue[device] = _full_queue
-
+        
         # Learner model for training
         learner_model = self.model_func(self.training_device)
 
@@ -247,7 +255,7 @@ class DMCTrainer:
         for p in range(self.num_players):
             stat_keys.append('mean_episode_return_'+str(p))
             stat_keys.append('loss_'+str(p))
-        frames, stats = 0, {k: 0 for k in stat_keys}
+        frames, iterations, stats = 0, 0, {k: 0 for k in stat_keys}
 
         # Load models if any
         if self.load_model and os.path.exists(self.checkpointpath):
@@ -262,8 +270,14 @@ class DMCTrainer:
                     models[device].get_agent(p).load_state_dict(learner_model.get_agent(p).state_dict())
             stats = checkpoint_states["stats"]
             frames = checkpoint_states["frames"]
+            iterations = checkpoint_states["iterations"]
             log.info(f"Resuming preempted job, current stats:\n{stats}")
-
+            
+#         ###### for debugging
+#         device = self.device_iterator[0]
+#         for i in range(10):
+#             act(i, device, self.T, free_queue[device], full_queue[device], models[device], buffers[device], self.env)
+#         ###### for debugging
 
         # Starting actor processes
         for device in self.device_iterator:
@@ -275,10 +289,32 @@ class DMCTrainer:
                 actor.start()
                 actor_processes.append(actor)
 
+        def checkpoint(frames, iterations):
+            log.info('Saving checkpoint to %s', self.checkpointpath)
+            _agents = learner_model.get_agents()
+            torch.save({
+                'model_state_dict': [_agent.state_dict() for _agent in _agents],
+                'optimizer_state_dict': [optimizer.state_dict() for optimizer in optimizers],
+                "stats": stats,
+                'frames': frames,
+                'iterations': iterations
+            }, self.checkpointpath)
+
+            # Save the weights for evaluation purpose
+            for position in range(self.num_players):
+                model_weights_dir = os.path.expandvars(os.path.expanduser(
+                    '%s/%s/%s' % (self.savedir, self.xpid, str(position)+'_{}k.pth'.format(iterations // 1000))))
+                torch.save(
+                    learner_model.get_agent(position),
+                    model_weights_dir
+                )
+                
         def batch_and_learn(i, device, position, local_lock, position_lock, lock=threading.Lock()):
             """Thread target for the learning process."""
-            nonlocal frames, stats
-            while frames < self.total_frames:
+            nonlocal frames, stats, iterations
+            
+            #while frames < self.total_frames:
+            while iterations < self.total_iterations:
                 batch = get_batch(
                     free_queue[device][position],
                     full_queue[device][position],
@@ -299,12 +335,17 @@ class DMCTrainer:
                 )
 
                 with lock:
-                    for k in _stats:
-                        stats[k] = _stats[k]
-                    to_log = dict(frames=frames)
-                    to_log.update({k: stats[k] for k in stat_keys})
-                    self.plogger.log(to_log)
                     frames += self.T * self.B
+                    iterations += 1
+                        
+                    if iterations % 1000 == 0:
+                        for k in _stats:
+                            stats[k] = _stats[k]
+                            self.summary_writer.add_scalar('train/' + k, _stats[k], iterations)
+                        to_log = dict(frames=frames)
+                        to_log.update({k: stats[k] for k in stat_keys})
+                        self.plogger.log(to_log)
+                        checkpoint(frames, iterations)
 
         for device in self.device_iterator:
             for m in range(self.num_buffers):
@@ -314,6 +355,12 @@ class DMCTrainer:
         threads = []
         locks = {device: [threading.Lock() for _ in range(self.num_players)] for device in self.device_iterator}
         position_locks = [threading.Lock() for _ in range(self.num_players)]
+        
+#         ###### for debugging
+#         device = self.device_iterator[0]
+#         position = 0
+#         batch_and_learn(0, device, position, locks[device][position], position_locks[position])
+#         ###### for debugging
 
         for device in self.device_iterator:
             for i in range(self.num_threads):
@@ -331,45 +378,28 @@ class DMCTrainer:
                     thread.start()
                     threads.append(thread)
 
-        def checkpoint(frames):
-            log.info('Saving checkpoint to %s', self.checkpointpath)
-            _agents = learner_model.get_agents()
-            torch.save({
-                'model_state_dict': [_agent.state_dict() for _agent in _agents],
-                'optimizer_state_dict': [optimizer.state_dict() for optimizer in optimizers],
-                "stats": stats,
-                'frames': frames,
-            }, self.checkpointpath)
-
-            # Save the weights for evaluation purpose
-            for position in range(self.num_players):
-                model_weights_dir = os.path.expandvars(os.path.expanduser(
-                    '%s/%s/%s' % (self.savedir, self.xpid, str(position)+'_'+str(frames)+'.pth')))
-                torch.save(
-                    learner_model.get_agent(position),
-                    model_weights_dir
-                )
-
         timer = timeit.default_timer
         try:
-            last_checkpoint_time = timer() - self.save_interval * 60
-            while frames < self.total_frames:
-                start_frames = frames
-                start_time = timer()
-                time.sleep(5)
+#             last_checkpoint_time = timer() - self.save_interval * 60
+#             while frames < self.total_frames:
+#                 start_frames = frames
+#                 start_time = timer()
+#                 time.sleep(5)
 
-                if timer() - last_checkpoint_time > self.save_interval * 60:
-                    checkpoint(frames)
-                    last_checkpoint_time = timer()
+#                 if timer() - last_checkpoint_time > self.save_interval * 60:
+#                     checkpoint(frames)
+#                     last_checkpoint_time = timer()
 
-                end_time = timer()
-                fps = (frames - start_frames) / (end_time - start_time)
-                log.info(
-                    'After %i frames: @ %.1f fps Stats:\n%s',
-                    frames,
-                    fps,
-                    pprint.pformat(stats),
-                )
+#                 end_time = timer()
+#                 fps = (frames - start_frames) / (end_time - start_time)
+#                 log.info(
+#                     'After %i frames: @ %.1f fps Stats:\n%s',
+#                     frames,
+#                     fps,
+#                     pprint.pformat(stats),
+#                 )
+            pass
+
         except KeyboardInterrupt:
             return
         else:

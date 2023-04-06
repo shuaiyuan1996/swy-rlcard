@@ -75,6 +75,7 @@ class Env(object):
                 (dict): The next state
                 (int): The ID of the next player
         '''
+        
         if not raw_action:
             action = self._decode_action(action)
 
@@ -96,6 +97,7 @@ class Env(object):
 
         Note: Error will be raised if step back from the root node.
         '''
+        
         if not self.allow_step_back:
             raise Exception('Step back is off. To use step_back, please set allow_step_back=True in rlcard.make')
 
@@ -133,12 +135,15 @@ class Env(object):
         Note: The trajectories are 3-dimension list. The first dimension is for different players.
               The second dimension is for different transitions. The third dimension is for the contents of each transiton
         '''
+        
+        
         trajectories = [[] for _ in range(self.num_players)]
         state, player_id = self.reset()
 
         # Loop to play the game
         trajectories[player_id].append(state)
         while not self.is_over():
+            
             # Agent plays
             if not is_training:
                 action, _ = self.agents[player_id].eval_step(state)
@@ -163,7 +168,7 @@ class Env(object):
             state = self.get_state(player_id)
             trajectories[player_id].append(state)
 
-        # Payoffs
+        # Payoffs        
         payoffs = self.get_payoffs()
 
         return trajectories, payoffs
@@ -178,12 +183,10 @@ class Env(object):
 
     def get_player_id(self):
         ''' Get the current player id
-
         Returns:
             (int): The id of the current player
         '''
         return self.game.get_player_id()
-
 
     def get_state(self, player_id):
         ''' Get the state given player id
@@ -205,25 +208,6 @@ class Env(object):
         Note: Must be implemented in the child class.
         '''
         raise NotImplementedError
-
-    def get_perfect_information(self):
-        ''' Get the perfect information of the current state
-
-        Returns:
-            (dict): A dictionary of all the perfect information of the current state
-        '''
-        raise NotImplementedError
-
-    def get_action_feature(self, action):
-        ''' For some environments such as DouDizhu, we can have action features
-
-        Returns:
-            (numpy.array): The action features
-        '''
-        # By default we use one-hot encoding
-        feature = np.zeros(self.num_actions, dtype=np.int8)
-        feature[action] = 1
-        return feature
 
     def seed(self, seed=None):
         self.np_random, seed = seeding.np_random(seed)

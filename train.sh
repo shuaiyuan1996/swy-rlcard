@@ -2,7 +2,8 @@
 #SBATCH --job-name=rlcard
 #SBATCH --time=300:00:00
 #SBATCH --mem=96G
-#SBATCH --gres=gpu:1
+#SBATCH --gres=gpu:2
+#SBATCH --cpus-per-task=4
 #SBATCH --constraint=2080rtx|v100|p100
 #SBATCH --exclude=linux41,linux42,linux43,linux44,linux45
 #SBATCH --partition=compsci-gpu
@@ -11,4 +12,10 @@
 source /home/users/shuai/venv/rlcard/bin/activate
 hostname
 
-python3 examples/run_dmc.py --env doudizhu --xpid doudizhu --cuda 0 --num_actor_devices 1 --training_device 0 --num_actors 8 --savedir results/dmc_result --save_interval 30
+# train by 2-gpu
+#python3 examples/run_dmc.py --env swy-blm --xpid swy-blm --cuda 0,1 --num_actor_devices 1 --training_device 0 --num_actors 8 --savedir results/dmc_swy --total_iterations 2000000
+
+# train by cpu only
+#python3 examples/run_dmc.py --env doudizhu --xpid doudizhu --num_actor_devices 1 --training_device 0 --num_actors 8 --savedir results/dmc_result_cpu --save_interval 30
+
+# human vs model
