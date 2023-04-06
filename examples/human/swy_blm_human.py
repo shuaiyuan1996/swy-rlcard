@@ -1,5 +1,7 @@
-''' A toy example of playing against rule-based bot on UNO
+''' A toy example of playing against a swy-bm agent
 '''
+import sys
+sys.path.append('/home/users/shuai/code/swy-rlcard')
 
 import rlcard
 from rlcard import models

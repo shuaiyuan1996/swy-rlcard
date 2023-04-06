@@ -138,7 +138,9 @@ class DMCTrainer:
             xpid=xpid,
             rootdir=savedir,
         )
-        self.summary_writer = SummaryWriter(os.path.join(savedir, xpid))
+        self.summary_writers = []
+        for _ in range(env.num_players):
+            self.summary_writers.append(SummaryWriter(os.path.join(savedir, xpid)))
 
         self.checkpointpath = os.path.expandvars(
             os.path.expanduser('%s/%s/%s' % (savedir, xpid, 'model.tar')))
@@ -255,7 +257,7 @@ class DMCTrainer:
         for p in range(self.num_players):
             stat_keys.append('mean_episode_return_'+str(p))
             stat_keys.append('loss_'+str(p))
-        frames, iterations, stats = 0, 0, {k: 0 for k in stat_keys}
+        frames, iterations, stats = 0, [0, 0], {k: 0 for k in stat_keys}
 
         # Load models if any
         if self.load_model and os.path.exists(self.checkpointpath):
@@ -289,7 +291,7 @@ class DMCTrainer:
                 actor.start()
                 actor_processes.append(actor)
 
-        def checkpoint(frames, iterations):
+        def checkpoint(frames, iterations, save_eval=True):
             log.info('Saving checkpoint to %s', self.checkpointpath)
             _agents = learner_model.get_agents()
             torch.save({
@@ -300,21 +302,22 @@ class DMCTrainer:
                 'iterations': iterations
             }, self.checkpointpath)
 
-            # Save the weights for evaluation purpose
-            for position in range(self.num_players):
-                model_weights_dir = os.path.expandvars(os.path.expanduser(
-                    '%s/%s/%s' % (self.savedir, self.xpid, str(position)+'_{}k.pth'.format(iterations // 1000))))
-                torch.save(
-                    learner_model.get_agent(position),
-                    model_weights_dir
-                )
+            if save_eval:
+                # Save the weights for evaluation purpose
+                for position in range(self.num_players):
+                    model_weights_dir = os.path.expandvars(os.path.expanduser(
+                        '%s/%s/%s' % (self.savedir, self.xpid, str(position)+'_{}k.pth'.format(iterations // 1000))))
+                    torch.save(
+                        learner_model.get_agent(position),
+                        model_weights_dir
+                    )
                 
         def batch_and_learn(i, device, position, local_lock, position_lock, lock=threading.Lock()):
             """Thread target for the learning process."""
             nonlocal frames, stats, iterations
             
             #while frames < self.total_frames:
-            while iterations < self.total_iterations:
+            while iterations[position] < self.total_iterations :
                 batch = get_batch(
                     free_queue[device][position],
                     full_queue[device][position],
@@ -336,16 +339,20 @@ class DMCTrainer:
 
                 with lock:
                     frames += self.T * self.B
-                    iterations += 1
+                    iterations[position] += 1
                         
-                    if iterations % 1000 == 0:
+                    if iterations[position] % 1000 == 0:
                         for k in _stats:
                             stats[k] = _stats[k]
-                            self.summary_writer.add_scalar('train/' + k, _stats[k], iterations)
+                            self.summary_writers[position].add_scalar('train/' + k, _stats[k], iterations[position])
                         to_log = dict(frames=frames)
                         to_log.update({k: stats[k] for k in stat_keys})
                         self.plogger.log(to_log)
-                        checkpoint(frames, iterations)
+                        if position == 0:
+                            checkpoint(frames, iterations[position], save_eval=False)
+                        
+                    if iterations[position] % 50000 == 0:
+                        checkpoint(frames, iterations[position])
 
         for device in self.device_iterator:
             for m in range(self.num_buffers):
