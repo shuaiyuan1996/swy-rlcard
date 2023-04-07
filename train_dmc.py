@@ -1,8 +1,5 @@
 ''' An example of training a Deep Monte-Carlo (DMC) Agent on the environments in RLCard
 '''
-import sys
-sys.path.append('/home/users/shuai/code/swy-rlcard')
-
 import os
 import argparse
 
