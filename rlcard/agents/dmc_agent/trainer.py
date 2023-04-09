@@ -138,12 +138,10 @@ class DMCTrainer:
         self.env = env
 
         self.plogger = FileWriter(
-            xpid=xpid,
+            xpid='bailongmen',
             rootdir=savedir,
         )
-        self.summary_writers = []
-        for _ in range(env.num_players):
-            self.summary_writers.append(SummaryWriter(os.path.join(savedir, xpid)))
+        self.summary_writer = SummaryWriter(os.path.join(savedir, 'bailongmen'))
 
         self.checkpointpath = os.path.expandvars(
             os.path.expanduser('%s/%s/%s' % (savedir, xpid, 'model.tar')))
@@ -343,21 +341,21 @@ class DMCTrainer:
                 with lock:
                     frames += self.T * self.B
                     iterations[position] += 1
-                        
+                    
                     if iterations[position] % 1000 == 0:
                         for k in _stats:
                             stats[k] = _stats[k]
-                            self.summary_writers[position].add_scalar('train/' + k, _stats[k], iterations[position])
+                            self.summary_writer.add_scalar('train/' + k, _stats[k], iterations[position])
                         to_log = dict(frames=frames)
                         to_log.update({k: stats[k] for k in stat_keys})
                         self.plogger.log(to_log)
                         if position == 0:
                             checkpoint(frames, iterations[position], save_eval=False)
                             
-                    if position == 0 and (1 or iterations[0] % 5000 == 0):
+                    if position == 0 and (iterations[0] % 5000 == 0):
                         res = validate(self.env, learner_model.agents, RandomAgent(), M=100)
                         for k, v in res.items():
-                            self.summary_writers[0].add_scalar('val_random/' + k, v, iterations[0])
+                            self.summary_writer.add_scalar('val_random/' + k, v, iterations[0])
                         
                     if iterations[position] % 50000 == 0:
                         checkpoint(frames, iterations[position])

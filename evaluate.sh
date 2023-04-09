@@ -15,4 +15,7 @@ hostname
 #python3 evaluate_human.py --ai_agent dmc --model_path results/dmc_swy/swy-blm/model.tar
 
 ## ai vs random baseline
-python3 validate.py --ai_agent dmc --model_path results/dmc_swy/swy-blm/model.tar --baseline_agent random
+#python3 validate.py --ai_agent dmc --model_path results/dmc_swy/swy-blm/model.tar --baseline_agent random
+
+## ai vs rule-based baseline
+python3 validate.py --ai_agent dmc --model_path results/dmc_swy/swy-blm/model.tar --baseline_agent rule-based

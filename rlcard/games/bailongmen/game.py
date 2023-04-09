@@ -6,7 +6,7 @@ from heapq import merge
 import numpy as np
 
 from rlcard.games.bailongmen.utils import SwyBlmDealer
-from rlcard.games.bailongmen.utils import _cards2array, _cards2table
+from rlcard.games.bailongmen.utils import _cards2array, _cards2table, compute_table_score
 
 
 class SwyBlmGame:
@@ -132,25 +132,9 @@ class SwyBlmGame:
             
         for player_id in range(self.num_players):
             table, joker = _cards2table(public_cards + self.player_private_cards[player_id])
+            self.final_score[player_id] = compute_table_score(table, joker)
+            
             self.final_tables.append((table, joker))
-            
-            score = 0
-            
-            for suit_id in range(4):  # 4, 8 points for Mei, Lan, Zhu, and Ju
-                suit_count = table[:, suit_id].sum()
-                score += (suit_count == 5) * 8 + (suit_count == 4) * 4
-            
-            for color_id in range(3):  # 1, 3 points for Grey, Blue, and Yellow
-                color_count = table[color_id, :].sum()
-                score += (color_count == 4) * 3 + (color_count == 3) * 1
-
-            for color_id in range(3, 5):  # 3, 6 points for Colorful, and Red
-                color_count = table[color_id, :].sum()
-                score += (color_count == 4) * 6 + (color_count == 3) * 3
-            
-            score += (joker.sum() == 2) * 5  # 5 points for two jokers
-            
-            self.final_score[player_id] = score
             
         return np.argmax(self.final_score)
 

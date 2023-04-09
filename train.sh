@@ -3,7 +3,7 @@
 #SBATCH --time=300:00:00
 #SBATCH --mem=96G
 #SBATCH --gres=gpu:2
-#SBATCH --cpus-per-task=4
+#SBATCH --cpus-per-task=8
 #SBATCH --constraint=2080rtx|v100|p100
 #SBATCH --exclude=linux41,linux42,linux43,linux44,linux45
 #SBATCH --partition=compsci-gpu

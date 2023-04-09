@@ -9,6 +9,8 @@ import torch
 import rlcard
 from rlcard.agents.dmc_agent.model import DMCAgent
 from rlcard.agents.random_agent import RandomAgent
+from rlcard.agents.rule_based_agent import RuleBasedAgent
+
 
 @torch.no_grad()
 def validate(env, agents, baseline_agent, M=100):
@@ -69,6 +71,10 @@ if __name__ == '__main__':
     # Prepare baseline agents
     if args.baseline_agent == "random":
         baseline_agent = RandomAgent()
+    elif args.baseline_agent == "rule-based":
+        baseline_agent = RuleBasedAgent()
+    else:
+        raise NotImplementedError
     
     res = validate(env, ai_agents, baseline_agent, M=100)
     print(res)

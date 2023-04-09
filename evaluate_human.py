@@ -3,7 +3,7 @@
 import argparse
 
 import rlcard
-from rlcard.agents.human_agents.bailongmen import HumanAgent, _print_action
+from rlcard.agents.human_agent import HumanAgent, _print_action
 from rlcard.agents.dmc_agent.model import DMCAgent
 from rlcard.games.bailongmen.utils import SUIT, COLOR
 
