@@ -64,6 +64,11 @@ def compute_table_score(table, joker):
     
     return score
 
+def count_suit(cards, suit):
+    return np.sum([suit in card for card in cards])
+
+def count_color(cards, color):
+    return np.sum([color in card for card in cards])
     
 # Dealer
 class SwyBlmDealer:

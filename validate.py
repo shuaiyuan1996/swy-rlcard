@@ -13,9 +13,9 @@ from rlcard.agents.rule_based_agent import RuleBasedAgent
 
 
 @torch.no_grad()
-def validate(env, agents, baseline_agent, M=100):
+def validate(env, agents, baseline_agent, M=1000):
     res = {}
-    
+
     # test first hand agent
     env.set_agents([agents[0], baseline_agent])
     first_score = np.zeros((M, 2))
@@ -76,5 +76,5 @@ if __name__ == '__main__':
     else:
         raise NotImplementedError
     
-    res = validate(env, ai_agents, baseline_agent, M=100)
+    res = validate(env, ai_agents, baseline_agent, M=1000)
     print(res)

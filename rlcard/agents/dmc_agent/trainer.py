@@ -41,6 +41,7 @@ from .pettingzoo_utils import (
 )
 
 from rlcard.agents.random_agent import RandomAgent
+from rlcard.agents.rule_based_agent import RuleBasedAgent
 from validate import validate
 
 def compute_loss(logits, targets):
@@ -352,10 +353,15 @@ class DMCTrainer:
                         if position == 0:
                             checkpoint(frames, iterations[position], save_eval=False)
                             
-                    if position == 0 and (iterations[0] % 5000 == 0):
+                    # validation run
+                    if position == 0 and iterations[0] % 5000 == 0:
                         res = validate(self.env, learner_model.agents, RandomAgent(), M=100)
                         for k, v in res.items():
                             self.summary_writer.add_scalar('val_random/' + k, v, iterations[0])
+                            
+                        res = validate(self.env, learner_model.agents, RuleBasedAgent(), M=100)
+                        for k, v in res.items():
+                            self.summary_writer.add_scalar('val_rule_based/' + k, v, iterations[0])
                         
                     if iterations[position] % 50000 == 0:
                         checkpoint(frames, iterations[position])
