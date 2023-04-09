@@ -5,8 +5,8 @@ import functools
 from heapq import merge
 import numpy as np
 
-from rlcard.games.swy_blm.utils import SwyBlmDealer
-from rlcard.games.swy_blm.utils import _cards2array, _cards2table
+from rlcard.games.bailongmen.utils import SwyBlmDealer
+from rlcard.games.bailongmen.utils import _cards2array, _cards2table
 
 
 class SwyBlmGame:
@@ -28,6 +28,7 @@ class SwyBlmGame:
         '''
         # initialize public variables
         self.final_score = [0, 0]
+        self.final_tables = []
         self.winner_id = None
         #self.history = []
 
@@ -127,9 +128,11 @@ class SwyBlmGame:
         public_cards = self.board_public_cards.copy()
         for player_id in range(self.num_players):
             public_cards += self.player_public_cards[player_id]
+        
             
         for player_id in range(self.num_players):
             table, joker = _cards2table(public_cards + self.player_private_cards[player_id])
+            self.final_tables.append((table, joker))
             
             score = 0
             

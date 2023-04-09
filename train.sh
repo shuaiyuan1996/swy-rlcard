@@ -16,4 +16,4 @@ hostname
 #python3 train_dmc.py --env swy-blm --xpid swy-blm --cuda 0,1 --num_actor_devices 1 --training_device 0 --num_actors 8 --savedir results/dmc_results --total_iterations 2000000
 
 # train by cpu only
-python3 train_dmc.py --env doudizhu --xpid doudizhu --num_actor_devices 1 --training_device 0 --num_actors 8 --savedir results/dmc_results_cpu --total_iterations 2000000
+python3 train_dmc.py --env swy-blm  --xpid swy-blm --num_actor_devices 1 --training_device 0 --num_actors 8 --savedir results/dmc_results_cpu --total_iterations 2000000

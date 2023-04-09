@@ -12,6 +12,10 @@ import rlcard
 # Read required docs
 ROOT_PATH = rlcard.__path__[0]
 
+COLOR = ["G", "B", "Y", "C", "R"]
+
+SUIT = ["M", "L", "Z", "J"]
+
 # Deck
 DECK = ['GM', 'GL', 'GZ', 'GJ',
         'BM', 'BL', 'BZ', 'BJ',

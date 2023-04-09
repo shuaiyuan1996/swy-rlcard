@@ -2,9 +2,9 @@ from collections import Counter, OrderedDict
 import numpy as np
 
 from rlcard.envs import Env
-from rlcard.games.swy_blm.game import SwyBlmGame
-from rlcard.games.swy_blm.utils import ACTION_2_ID, ID_2_ACTION
-from rlcard.games.swy_blm.utils import _cards2array, _cards2table
+from rlcard.games.bailongmen.game import SwyBlmGame
+from rlcard.games.bailongmen.utils import ACTION_2_ID, ID_2_ACTION
+from rlcard.games.bailongmen.utils import _cards2array, _cards2table
 
 
 def one_hot(i, n):
@@ -76,7 +76,7 @@ class SwyBlmEnv(Env):
         extracted_state = OrderedDict({'obs': obs, 'legal_actions': legal_actions})
         extracted_state['raw_obs'] = state
         extracted_state['raw_legal_actions'] = raw_legal_actions
-        #extracted_state['action_record'] = self.action_recorder
+        extracted_state['action_record'] = self.action_recorder
         return extracted_state
             
     def get_payoffs(self):
