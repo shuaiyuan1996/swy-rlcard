@@ -32,6 +32,8 @@ def load_model(model_path, env=None, position=None, device=None):
     
     return agent
 
+    
+
 def evaluate(args):
 
     # Check whether gpu is available

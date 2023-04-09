@@ -11,4 +11,8 @@
 source /home/users/shuai/venv/rlcard/bin/activate
 hostname
 
-python3 evaluate_human.py --ai_agent dmc --model_path results/dmc_swy/swy-blm/model.tar
+## ai vs human
+#python3 evaluate_human.py --ai_agent dmc --model_path results/dmc_swy/swy-blm/model.tar
+
+## ai vs random baseline
+python3 validate.py --ai_agent dmc --model_path results/dmc_swy/swy-blm/model.tar --baseline_agent random

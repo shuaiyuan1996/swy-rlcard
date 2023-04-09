@@ -40,6 +40,9 @@ from .pettingzoo_utils import (
     act_pettingzoo,
 )
 
+from rlcard.agents.random_agent import RandomAgent
+from validate import validate
+
 def compute_loss(logits, targets):
     loss = ((logits - targets)**2).mean()
     return loss
@@ -350,6 +353,11 @@ class DMCTrainer:
                         self.plogger.log(to_log)
                         if position == 0:
                             checkpoint(frames, iterations[position], save_eval=False)
+                            
+                    if position == 0 and (1 or iterations[0] % 5000 == 0):
+                        res = validate(self.env, learner_model.agents, RandomAgent(), M=100)
+                        for k, v in res.items():
+                            self.summary_writers[0].add_scalar('val_random/' + k, v, iterations[0])
                         
                     if iterations[position] % 50000 == 0:
                         checkpoint(frames, iterations[position])
