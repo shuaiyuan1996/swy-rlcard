@@ -33,6 +33,7 @@ Version 1.0: (--ai_agent dmc --model_path results/dmc_swy/bailongmen/model.tar)
 - 对战rule-based agent的情况（基于5000场的模拟对局）：
     - 先手：胜63.3%，负28.2%，平8.5%。平均每局净胜1.882分。
     - 后手：胜68.1%，负22.8%，平9.9%。平均每局净胜2.465分。
+- 对战游戏内官方AI（“鱼香肉丝”）的情况：手动10场对局中，我方8胜、1负、1平。
 
 ### Baseline agents
 

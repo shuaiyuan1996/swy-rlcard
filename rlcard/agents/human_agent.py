@@ -23,6 +23,7 @@ class HumanAgent(object):
         Returns:
             action (int): The action decided by human
         '''
+        import IPython; IPython.embed()
         #print(state['raw_obs'])
         _print_state(state['raw_obs'], state['action_record'])
         action = input('>> Enter your action: ')

@@ -70,7 +70,7 @@ class SwyBlmEnv(Env):
                               oppo_joker_count, oppo_suit_count, oppo_color_count))
         
         # encode legal actions
-        raw_legal_actions = self._get_legal_actions()
+        raw_legal_actions = self._get_legal_actions(state)
         legal_actions = {ACTION_2_ID[x]: one_hot(ACTION_2_ID[x], len(ID_2_ACTION)) for x in raw_legal_actions}
 
         extracted_state = OrderedDict({'obs': obs, 'legal_actions': legal_actions})
@@ -99,13 +99,12 @@ class SwyBlmEnv(Env):
         '''
         return ID_2_ACTION[action_id]
 
-    def _get_legal_actions(self):
+    def _get_legal_actions(self, state):
         ''' Get all legal actions for current state
 
         Returns:
             legal_actions (list): a list of legal actions' id
         '''
-        state = self.game.current_state
         legal_actions = self.game.compute_legal_actions(state['cur_hand'], len(state['cur_public']), len(state['cur_private']))
         return legal_actions
 

@@ -139,10 +139,10 @@ class DMCTrainer:
         self.env = env
 
         self.plogger = FileWriter(
-            xpid='bailongmen',
+            xpid=xpid,
             rootdir=savedir,
         )
-        self.summary_writer = SummaryWriter(os.path.join(savedir, 'bailongmen'))
+        self.summary_writer = SummaryWriter(os.path.join(savedir, xpid))
 
         self.checkpointpath = os.path.expandvars(
             os.path.expanduser('%s/%s/%s' % (savedir, xpid, 'model.tar')))
@@ -342,7 +342,7 @@ class DMCTrainer:
                 with lock:
                     frames += self.T * self.B
                     iterations[position] += 1
-                    print("position={}, iterations={}".format(position, iterations))
+                    #print("position={}, device={}, i={}, iterations={}".format(position, device, i, iterations))
                     
                     if iterations[position] % 1000 == 0:
                         for k in _stats:
@@ -355,7 +355,7 @@ class DMCTrainer:
                             checkpoint(frames, iterations[position], save_eval=False)
                             
                     # validation run
-                    if position == 0 and (1 or iterations[0] % 5000 == 0):
+                    if position == 0 and (iterations[0] % 5000 == 0):
                         res = validate(self.env, learner_model.agents, RandomAgent(), M=1000)
                         for k, v in res.items():
                             self.summary_writer.add_scalar('val_random/' + k, v, iterations[0])

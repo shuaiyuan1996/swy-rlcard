@@ -12,3 +12,15 @@ class bcolor:
     GREEN = '\033[92m'
     RED =  '\033[91m'
     CYAN = '\033[96m'
+    
+def color_your_oppo(you_oppo):
+    return bcolor.RED + you_oppo + bcolor.ENDC
+
+def color_you(you):
+    return bcolor.CYAN + you + bcolor.ENDC
+
+def bold(input):
+    if type(input) == str:
+        return bcolor.BOLD + input + bcolor.ENDC
+    elif type(input) == list:
+        return [bcolor.BOLD + bcolor.UNDERLINE + i + bcolor.ENDC for i in input]

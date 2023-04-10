@@ -45,6 +45,12 @@ def _cards2table(cards):
     joker = array[20:]
     return regular, joker
 
+def check_cards_validity(cards):
+    for card in cards:
+        if card not in DECK:
+            return False, card
+    return True, None
+
 def compute_table_score(table, joker):
     score = 0
 
