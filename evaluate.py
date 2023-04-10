@@ -3,102 +3,80 @@
 import os
 import argparse
 
+import numpy as np
+import torch
+
 import rlcard
-from rlcard.agents import (
-    DQNAgent,
-    RandomAgent,
-)
-from rlcard.utils import (
-    get_device,
-    set_seed,
-    tournament,
-)
+from rlcard.agents.dmc_agent.model import DMCAgent
+from rlcard.agents.random_agent import RandomAgent
+from rlcard.agents.rule_based_agent import RuleBasedAgent
 
-def load_model(model_path, env=None, position=None, device=None):
-    if os.path.isfile(model_path):  # Torch model
-        import torch
-        agent = torch.load(model_path, map_location=device)
-        agent.set_device(device)
-    elif os.path.isdir(model_path):  # CFR model
-        from rlcard.agents import CFRAgent
-        agent = CFRAgent(env, model_path)
-        agent.load()
-    elif model_path == 'random':  # Random model
-        from rlcard.agents import RandomAgent
-        agent = RandomAgent(num_actions=env.num_actions)
-    else:  # A model in the model zoo
-        from rlcard import models
-        agent = models.load(model_path).agents[position]
+
+@torch.no_grad()
+def validate(env, agents, baseline_agent, M=1000):
+    res = {}
+
+    # test first hand agent
+    env.set_agents([agents[0], baseline_agent])
+    first_score = np.zeros((M, 2))
+    for i in range(M):
+        env.run(is_training=False)
+        first_score[i] = env.game.final_score
     
-    return agent
+    res['first_avg_score'] = first_score[:, 0].mean()
+    res['first_avg_winning_score'] = (first_score[:, 0] - first_score[:, 1]).mean()
+    res['first_avg_winning_rate'] = (first_score[:, 0] > first_score[:, 1]).mean()
+    res['first_avg_losing_rate'] = (first_score[:, 0] < first_score[:, 1]).mean()
 
+    # test second hand agent
+    env.set_agents([baseline_agent, agents[1]])
+    second_score = np.zeros((M, 2))
+    for i in range(M):
+        env.run(is_training=False)
+        second_score[i] = env.game.final_score
     
+    res['second_avg_score'] = second_score[:, 1].mean()
+    res['second_avg_winning_score'] = (second_score[:, 1] - second_score[:, 0]).mean()
+    res['second_avg_winning_rate'] = (second_score[:, 1] > second_score[:, 0]).mean()
+    res['second_avg_losing_rate'] = (second_score[:, 1] < second_score[:, 0]).mean()
+    
+    return res
 
-def evaluate(args):
-
-    # Check whether gpu is available
-    device = get_device()
-        
-    # Seed numpy, torch, random
-    set_seed(args.seed)
-
-    # Make the environment with seed
-    env = rlcard.make(args.env, config={'seed': args.seed})
-
-    # Load models
-    agents = []
-    for position, model_path in enumerate(args.models):
-        agents.append(load_model(model_path, env, position, device))
-    env.set_agents(agents)
-
-    # Evaluate
-    rewards = tournament(env, args.num_games)
-    for position, reward in enumerate(rewards):
-        print(position, args.models[position], reward)
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser("Evaluation example in RLCard")
-    parser.add_argument(
-        '--env',
-        type=str,
-        default='leduc-holdem',
-        choices=[
-            'blackjack',
-            'leduc-holdem',
-            'limit-holdem',
-            'doudizhu',
-            'mahjong',
-            'no-limit-holdem',
-            'uno',
-            'gin-rummy',
-        ],
-    )
-    parser.add_argument(
-        '--models',
-        nargs='*',
-        default=[
-            'experiments/leduc_holdem_dqn_result/model.pth',
-            'random',
-        ],
-    )
-    parser.add_argument(
-        '--cuda',
-        type=str,
-        default='',
-    )
-    parser.add_argument(
-        '--seed',
-        type=int,
-        default=42,
-    )
-    parser.add_argument(
-        '--num_games',
-        type=int,
-        default=10000,
-    )
-
+    parser = argparse.ArgumentParser("Evaluate agent against baselines")
+    parser.add_argument('--cuda', action='store_true')
+    parser.add_argument('--ai_agent', type=str, required=True)
+    parser.add_argument('--baseline_agent', type=str, default="random")
+    parser.add_argument('--model_path', type=str, required=True)
+    parser.add_argument('--human_order', type=int, choices=[1, 2], default=None)
     args = parser.parse_args()
 
-    os.environ["CUDA_VISIBLE_DEVICES"] = args.cuda
-    evaluate(args)
+    DEVICE = "cuda:0" if args.cuda else "cpu"
+    
+    ## Make environment
+    env = rlcard.make('swy-blm')
+    
+    ## Prepare agents
+    if args.ai_agent == 'dmc':
+        ai_agents = []
+        for p in range(env.num_players):
+            ai_agents.append(DMCAgent(env.state_shape[p], env.action_shape[p], mlp_layers=[256, 256, 256, 128], device=DEVICE))
 
+    # load trained ai agents
+    ckpt_states = torch.load(args.model_path, map_location=DEVICE)
+    for p in range(env.num_players):
+        ai_agents[p].load_state_dict(ckpt_states['model_state_dict'][p])
+
+    print("AI model version: {} at {}".format(ai_agents[0].__class__, args.model_path))
+    
+    # Prepare baseline agents
+    if args.baseline_agent == "random":
+        baseline_agent = RandomAgent()
+    elif args.baseline_agent == "rule-based":
+        baseline_agent = RuleBasedAgent()
+    else:
+        raise NotImplementedError
+    
+    res = validate(env, ai_agents, baseline_agent, M=5000)
+    print(res)

@@ -1,4 +1,8 @@
-# 食物语“摆龙门”游戏AI代打
+shenme de pi # 食物语“摆龙门”游戏AI代打
+
+## 免责声明
+
+本程序仅用于学习与交流，任何超出此范围的使用所导致的后果将全部由使用者本人承担。选择使用本程序，表明您已无条件同意接受以上条款。为避免本程序的恶意使用破坏游戏平衡，本站将不提供预训练模型权重等支持文件。
 
 adapted from the [RLCard framework](https://github.com/datamllab/rlcard)
 
@@ -23,8 +27,12 @@ adapted from the [RLCard framework](https://github.com/datamllab/rlcard)
 DMC agent: Deep Monte Carlo. 
 
 Version 1.0: (--ai_agent dmc --model_path results/dmc_swy/bailongmen/model.tar)
-- 对战random agent的情况（基于1000场的模拟对局）：先手胜率91.1%，平均每局净胜5.68分；后手时胜率91.3%，平均每局净胜5.77分。
-- 对战rule-based agent的情况（基于1000场的模拟对局）：先手胜率62.2%，平均每局净胜1.84分；后手时胜率71.2%，平均每局净胜2.57分。
+- 对战random agent的情况（基于5000场的模拟对局）：
+    - 先手：胜91.1%，负5.6%，平3.3%。平均每局净胜5.75分。
+    - 后手：胜92.1%，负4.8%，平3.1%。平均每局净胜5.92分。
+- 对战rule-based agent的情况（基于5000场的模拟对局）：
+    - 先手：胜63.3%，负28.2%，平8.5%。平均每局净胜1.882分。
+    - 后手：胜68.1%，负22.8%，平9.9%。平均每局净胜2.465分。
 
 ### Baseline agents
 
@@ -33,5 +41,7 @@ Version 1.0: (--ai_agent dmc --model_path results/dmc_swy/bailongmen/model.tar)
 
 **Rule-based agent**
 
-Rule-based agent 对战 Random agent:基于1000场的模拟对局，Rule-based agent先手时胜率87.0%，平均每局净胜4.54分；后手时胜率88.3%，平均每局净胜4.80分。
+- Rule-based agent 对战 Random agent的情况（基于1000场的模拟对局）：
+    - 先手：胜81.5%，负12.6%，平5.9%。平均每局净胜4.56分。
+    - 后手：胜84.7%，负11.2%，平4.1%。平均每局净胜4.94分。
 

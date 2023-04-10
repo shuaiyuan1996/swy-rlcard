@@ -42,7 +42,7 @@ from .pettingzoo_utils import (
 
 from rlcard.agents.random_agent import RandomAgent
 from rlcard.agents.rule_based_agent import RuleBasedAgent
-from validate import validate
+from evaluate import validate
 
 def compute_loss(logits, targets):
     loss = ((logits - targets)**2).mean()
@@ -342,6 +342,7 @@ class DMCTrainer:
                 with lock:
                     frames += self.T * self.B
                     iterations[position] += 1
+                    print("position={}, iterations={}".format(position, iterations))
                     
                     if iterations[position] % 1000 == 0:
                         for k in _stats:
@@ -354,12 +355,12 @@ class DMCTrainer:
                             checkpoint(frames, iterations[position], save_eval=False)
                             
                     # validation run
-                    if position == 0 and iterations[0] % 5000 == 0:
-                        res = validate(self.env, learner_model.agents, RandomAgent(), M=100)
+                    if position == 0 and (1 or iterations[0] % 5000 == 0):
+                        res = validate(self.env, learner_model.agents, RandomAgent(), M=1000)
                         for k, v in res.items():
                             self.summary_writer.add_scalar('val_random/' + k, v, iterations[0])
                             
-                        res = validate(self.env, learner_model.agents, RuleBasedAgent(), M=100)
+                        res = validate(self.env, learner_model.agents, RuleBasedAgent(), M=1000)
                         for k, v in res.items():
                             self.summary_writer.add_scalar('val_rule_based/' + k, v, iterations[0])
                         
