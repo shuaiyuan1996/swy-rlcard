@@ -24,8 +24,8 @@ adapted from the [RLCard framework](https://github.com/datamllab/rlcard)
 
 ### AI Agents
 
-#### Version 1.0: (--ai_agent dmc --model_path results/dmc_swy/bailongmen/model.tar)
-Deep Monte Carlo with 4-layer MLP [256,256,256,128] (--cuda 0,1 --num_actor_devices 1 --training_device 1 --num_actors 8 --total_iterations 300000)
+#### Version 1.0: (--ai_agent dmc --model_path results/dmc_swy_1.0/bailongmen/model.tar)
+方法：Deep Monte Carlo with 4-layer MLP [256,256,256,128] (--cuda 0,1 --num_actor_devices 1 --training_device 1 --num_actors 8 --total_iterations 300000)
 - 对战random agent的情况（基于5000场的模拟对局）：
     - 先手：胜91.1%，负5.6%，平3.3%。平均每局净胜5.75分。
     - 后手：胜92.1%，负4.8%，平3.1%。平均每局净胜5.92分。
