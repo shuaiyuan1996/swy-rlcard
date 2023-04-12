@@ -21,7 +21,7 @@
 
 **动作编码**：卡牌编码 + 区域（0-打入私有区，1-打入公有区）。比如，"CM1"表示将“彩梅”牌打入公有区。
 
-![card_code](figures/bailongmen_card_code.png)
+<img src="figures/bailongmen_card_code.png" width = "400" alt="card_code" align=center />
 
 
 ### 状态特征空间
