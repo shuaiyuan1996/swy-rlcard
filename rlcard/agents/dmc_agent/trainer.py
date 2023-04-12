@@ -441,5 +441,5 @@ class DMCTrainer:
                 thread.join()
             log.info('Learning finished after %d frames.', frames)
 
-        checkpoint(frames)
+        checkpoint(frames, self.total_iterations)
         self.plogger.close()

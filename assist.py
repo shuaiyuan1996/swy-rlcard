@@ -34,7 +34,9 @@ def assist_game(env, agents):
     
     try:
         raw_obs = {}
-
+        
+        print('=' * 30 + "     Start Game     " + '=' * 30)
+        
         # enter initial info
         board_public = input(">> Enter the 2 initial public cards on board: ").split()
         valid, unrecognized_card = check_cards_validity(board_public)
@@ -49,7 +51,6 @@ def assist_game(env, agents):
         print("Starting with board public cards {} and {}.".format(*bold(raw_obs['board_public'])))
 
         # enter who to go first
-        print('=' * 30 + "     Start Game     " + '=' * 30)
         order = input(">> Are {} playing first-hand (F) or second-hand (S)? ".format(color_you("you")))
         while order not in ['F', 'S']:
             order = input(">> Invalid input. Please enter 'F' or 'S': ")
@@ -116,11 +117,13 @@ def assist_game(env, agents):
 
             # make decision
             state = env._extract_state(raw_obs)
-            action_id = agent.step(state)
+            action_id, other_info = agent.eval_step(state)
             action = ID_2_ACTION[action_id]
+            exp_winning_score = np.around(other_info['values'][action], decimals=2)
 
             card, sec = action[:2], "public" if action[2] == '1' else "private"
-            input("{} action: please put {} in the {} area and press <ENTER> to proceed...".format(color_you("Your"), bold(card), bold(sec)))
+            print("{} action: please put {} in the {} area.".format(color_you("Your"), bold(card), bold(sec)))
+            input("After this action, {} are expected to win {} points over {}. Press <ENTER> to proceed...".format(color_you("you"), bold(str(exp_winning_score)), color_your_oppo("your opponent")))
             raw_obs['cur_' + sec].append(card)
             raw_obs['cur_hand'].remove(card)
 

@@ -25,7 +25,8 @@ def train(args):
         num_actor_devices=args.num_actor_devices,
         num_actors=args.num_actors,
         training_device=args.training_device,
-        learning_rate=0.0004,
+        learning_rate=0.0002,
+        exp_epsilon=0.1,
         batch_size=32,
         unroll_length=10,
         mlp_layers=[256,256,256,128]
