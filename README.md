@@ -24,16 +24,16 @@ adapted from the [RLCard framework](https://github.com/datamllab/rlcard)
 
 ### AI Agents
 
-DMC agent: Deep Monte Carlo. 
-
-Version 1.0: (--ai_agent dmc --model_path results/dmc_swy/bailongmen/model.tar)
+#### Version 1.0: (--ai_agent dmc --model_path results/dmc_swy/bailongmen/model.tar)
+Deep Monte Carlo with 4-layer MLP [256,256,256,128] (--cuda 0,1 --num_actor_devices 1 --training_device 1 --num_actors 8 --total_iterations 300000)
 - 对战random agent的情况（基于5000场的模拟对局）：
     - 先手：胜91.1%，负5.6%，平3.3%。平均每局净胜5.75分。
     - 后手：胜92.1%，负4.8%，平3.1%。平均每局净胜5.92分。
 - 对战rule-based agent的情况（基于5000场的模拟对局）：
     - 先手：胜63.3%，负28.2%，平8.5%。平均每局净胜1.882分。
     - 后手：胜68.1%，负22.8%，平9.9%。平均每局净胜2.465分。
-- 对战游戏内官方AI（“鱼香肉丝”）的情况：手动10场对局中，我方8胜、1负、1平。
+- 对战游戏内官方AI（“鱼香肉丝”）的情况：手动10场对局中，8胜、1负、1平。
+- 对战作者本人（expert human agent）的情况：手动10场对局中，6胜、3负、1平。
 
 ### Baseline agents
 

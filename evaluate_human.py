@@ -114,6 +114,8 @@ if __name__ == "__main__":
         
         if env.game.final_score[human_player] > env.game.final_score[ai_player]:
             print(_you_code("You") + ' win!')
+        elif env.game.final_score[human_player] == env.game.final_score[ai_player]:
+            print("Draw!")
         else:
             print(_you_code("You") + ' lose...')
 

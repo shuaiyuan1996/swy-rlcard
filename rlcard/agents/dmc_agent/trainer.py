@@ -32,6 +32,7 @@ from .utils import (
     get_batch,
     create_buffers,
     create_optimizers,
+    create_schedulers,
     act,
     log,
 )
@@ -54,6 +55,7 @@ def learn(
     agent,
     batch,
     optimizer,
+    scheduler,
     training_device,
     max_grad_norm,
     mean_episode_return_buf,
@@ -79,6 +81,7 @@ def learn(
         loss.backward()
         nn.utils.clip_grad_norm_(agent.parameters(), max_grad_norm)
         optimizer.step()
+        scheduler.step()
 
         for actor_model in actor_models.values():
             actor_model.get_agent(position).load_state_dict(agent.state_dict())
@@ -253,6 +256,13 @@ class DMCTrainer:
             self.alpha,
             learner_model,
         )
+        
+        # Create schedulers
+        schedulers = create_schedulers(
+            optimizers,
+            self.learning_rate,
+            self.total_iterations
+        )
 
         # Stat Keys
         stat_keys = []
@@ -270,6 +280,7 @@ class DMCTrainer:
             for p in range(self.num_players):
                 learner_model.get_agent(p).load_state_dict(checkpoint_states["model_state_dict"][p])
                 optimizers[p].load_state_dict(checkpoint_states["optimizer_state_dict"][p])
+                schedulers[p].load_state_dict(checkpoint_states["scheduler_state_dict"][p])
                 for device in self.device_iterator:
                     models[device].get_agent(p).load_state_dict(learner_model.get_agent(p).state_dict())
             stats = checkpoint_states["stats"]
@@ -299,6 +310,7 @@ class DMCTrainer:
             torch.save({
                 'model_state_dict': [_agent.state_dict() for _agent in _agents],
                 'optimizer_state_dict': [optimizer.state_dict() for optimizer in optimizers],
+                'scheduler_state_dict': [scheduler.state_dict() for scheduler in schedulers],
                 "stats": stats,
                 'frames': frames,
                 'iterations': iterations
@@ -333,6 +345,7 @@ class DMCTrainer:
                     learner_model.get_agent(position),
                     batch,
                     optimizers[position],
+                    schedulers[position],
                     self.training_device,
                     self.max_grad_norm,
                     self.mean_episode_return_buf,
@@ -348,6 +361,7 @@ class DMCTrainer:
                         for k in _stats:
                             stats[k] = _stats[k]
                             self.summary_writer.add_scalar('train/' + k, _stats[k], iterations[position])
+                        self.summary_writer.add_scalar('train/learning_rate_{}'.format(position), optimizers[position].param_groups[0]['lr'], iterations[position])
                         to_log = dict(frames=frames)
                         to_log.update({k: stats[k] for k in stat_keys})
                         self.plogger.log(to_log)

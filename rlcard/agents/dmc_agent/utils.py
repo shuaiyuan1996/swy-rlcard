@@ -18,6 +18,7 @@ import traceback
 
 import numpy as np
 import torch
+import torch.optim as optim
 
 shandle = logging.StreamHandler()
 shandle.setFormatter(
@@ -93,6 +94,23 @@ def create_optimizers(
             alpha=alpha)
         optimizers.append(optimizer)
     return optimizers
+
+def create_schedulers(
+    optimizers,
+    max_learning_rate,
+    total_iterations
+):
+    schedulers = []
+    for player_id in range(len(optimizers)):
+        scheduler = optim.lr_scheduler.OneCycleLR(
+            optimizers[player_id],
+            max_learning_rate,
+            total_iterations,
+            pct_start=0.05,
+            cycle_momentum=False,
+            anneal_strategy='linear')
+        schedulers.append(scheduler)
+    return schedulers
 
 def act(
     i,

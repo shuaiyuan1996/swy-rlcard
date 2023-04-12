@@ -23,7 +23,6 @@ class HumanAgent(object):
         Returns:
             action (int): The action decided by human
         '''
-        import IPython; IPython.embed()
         #print(state['raw_obs'])
         _print_state(state['raw_obs'], state['action_record'])
         action = input('>> Enter your action: ')
@@ -75,7 +74,7 @@ def _print_state(state, action_record):
     string += ' ' * 4 + your_string + " public: {0:10s}".format(', '.join(map(_card_str, state['cur_public'])))
     string += ' ' * 4 + your_oppo_string + "'s public: {0:10s}".format(', '.join(map(_card_str, state['oppo_public'])))
     print(string)
-    print("  " + your_string + " hand: {}, {}, {}, {}".format(*map(_card_str, state['cur_hand'])) + ' ' * 19 + your_string + " private: {0:10s}".format(','.join(map(_card_str, state['cur_private']))))
+    print("  " + your_string + " hand: {}, {}, {}, {}".format(*map(_card_str, state['cur_hand'])) + ' ' * 19 + your_string + " private: {0:10s}".format(', '.join(map(_card_str, state['cur_private']))))
 
 def _print_action(name, action):
     ''' Print out an action in a nice form
