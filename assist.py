@@ -38,7 +38,7 @@ def assist_game(env, agents):
         print('=' * 30 + "     Start Game     " + '=' * 30)
         
         # enter initial info
-        board_public = input(">> Enter the 2 initial public cards on board: ").split()
+        board_public = input(">> Enter the 2 initial public cards on the board: ").split()
         valid, unrecognized_card = check_cards_validity(board_public)
         while not valid or len(board_public) != 2:
             if not valid:
@@ -123,7 +123,7 @@ def assist_game(env, agents):
 
             card, sec = action[:2], "public" if action[2] == '1' else "private"
             print("{} action: please put {} in the {} area.".format(color_you("Your"), bold(card), bold(sec)))
-            input("After this action, {} are expected to win {} points over {}. Press <ENTER> to proceed...".format(color_you("you"), bold(str(exp_winning_score)), color_your_oppo("your opponent")))
+            input("{} are now expected to win {} points over {} in the end! Press <ENTER> to proceed... ".format(color_you("You"), bold(str(exp_winning_score)), color_your_oppo("your opponent")))
             raw_obs['cur_' + sec].append(card)
             raw_obs['cur_hand'].remove(card)
 

@@ -63,6 +63,7 @@ def _print_state(state, action_record):
     # print last opponent action if applicable
     if oppo_action is not None:
         print('-' * 29 + " " + your_oppo_string + "'s turn " + '-' * 29)
+        print("{} drawed a card.".format(your_oppo_string))
         _print_action(your_oppo_string, oppo_action)
      
     # print your turn

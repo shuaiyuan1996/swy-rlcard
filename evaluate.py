@@ -49,6 +49,7 @@ if __name__ == '__main__':
     parser.add_argument('--ai_agent', type=str, required=True)
     parser.add_argument('--baseline_agent', type=str, default="random")
     parser.add_argument('--model_path', type=str, required=True)
+    parser.add_argument('--total_simulations', type=int, default=5000)
     parser.add_argument('--human_order', type=int, choices=[1, 2], default=None)
     args = parser.parse_args()
 
@@ -78,5 +79,5 @@ if __name__ == '__main__':
     else:
         raise NotImplementedError
     
-    res = validate(env, ai_agents, baseline_agent, M=5000)
+    res = validate(env, ai_agents, baseline_agent, M=args.total_simulations)
     print(res)

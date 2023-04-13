@@ -21,6 +21,12 @@ args = parser.parse_args()
 
 DEVICE = "cuda:0" if args.cuda else "cpu"
 
+def _your_oppo_code(you_oppo):
+    return bcolor.RED + you_oppo + bcolor.ENDC
+def _you_code(you):
+    return bcolor.CYAN + you + bcolor.ENDC
+        
+        
 if __name__ == "__main__":
 
     ## Make environment
@@ -54,25 +60,20 @@ if __name__ == "__main__":
         if human_order == 1:
             env.set_agents([human_agent, ai_agents[1]])
             human_player, ai_player = 0, 1
-            print("You go first, and AI follows!")
+            print("{} go first, and {} follows!".format(_you_code("You"), _your_oppo_code("your opponent (AI)")))
         else:
             env.set_agents([ai_agents[0], human_agent])
             human_player, ai_player = 1, 0
-            print("AI goes first, and you follow!")
+            print("{} goes first, and {} follow!".format(_your_oppo_code("Your opponent (AI)"), _you_code("you")))
 
         trajectories, payoffs = env.run(is_training=False)
-        
-        def _your_oppo_code(you_oppo):
-            return bcolor.RED + you_oppo + bcolor.ENDC
-        def _you_code(you):
-            return bcolor.CYAN + you + bcolor.ENDC
-
-        
+       
         # If the human does not take the final action, we need to
         # print other players action      
         if human_order == 1:
             oppo_action = trajectories[0][-1]['action_record'][-1][1]
             print('-' * 29 + " " + _your_oppo_code("Your opponent") + "'s turn " + '-' * 29)
+            print("{} drawed a new card.".format(_your_oppo_code("Your opponent")))
             _print_action(_your_oppo_code("Your opponent"), oppo_action)
 
         # print final result
@@ -110,7 +111,7 @@ if __name__ == "__main__":
                 string += " o "
         print(string)
         
-        print(_you_code("Your") + " score = {}. ".format(env.game.final_score[human_player]) + _your_oppo_code("Your opponent") + "'s score = {}.".format(env.game.final_score[ai_player]))
+        print(_you_code("Your") + " score = {}. ".format(env.game.final_score[human_player]) + _your_oppo_code("Your opponent (AI)") + "'s score = {}.".format(env.game.final_score[ai_player]))
         
         if env.game.final_score[human_player] > env.game.final_score[ai_player]:
             print(_you_code("You") + ' win!')

@@ -2,17 +2,57 @@
 
 ![Python 3.6.9](https://img.shields.io/badge/Python-3.6.9-brightgreen?style=plastic) ![PyTorch 1.10.0](https://img.shields.io/badge/PyTorch-1.10.0-brightgreen?style=plastic) ![CUDA 10.2](https://img.shields.io/badge/CUDA-10.2-brightgreen?style=plastic)
 
-本程序改编自[RLCard](https://rlcard.org)框架。有关如何使用、版本依赖等详细信息请参考他们的[官方源代码](https://github.com/datamllab/rlcard)。
+本程序改编自[RLCard](https://rlcard.org)框架。有关代码结构、版本依赖等详细信息请参考他们的[官方源代码](https://github.com/datamllab/rlcard)。
 
-## 免责声明
+## 0. 免责声明
 
 本程序仅用于学习与交流，任何超出此范围的使用所导致的全部后果将由使用者本人承担。选择使用本程序，表明您已无条件同意接受以上条款。为避免本程序的恶意使用破坏游戏平衡，本站将不提供预训练模型权重等支持文件。说人话就是，如果你AI代打被封号了，不关我事。
 
-## 游戏简介
+## 1. 游戏简介
 
 略（详见[这里](https://www.9game.cn/news/4192674.html)和[这里](https://www.bilibili.com/read/cv4972337)）。
 
-## 方法
+## 2. 如何使用
+
+### Training
+
+#### DMC (Deep Monte Carlo) Agents
+```shell
+# Using 2 gpus (recommended)
+python3 train_dmc.py --env swy-blm --xpid <EXPERIMENT_ID> --cuda 0,1 --num_actor_devices 1 --training_device 1 --num_actors 8 --savedir <SAVE_DIR> --total_iterations 300000
+
+# Using cpu only
+python3 train_dmc.py --env swy-blm  --xpid <EXPERIMENT_ID> --num_actor_devices 1 --training_device 0 --num_actors 8 --savedir <SAVE_DIR> --total_iterations 2000000
+```
+
+### Evaluation
+```shell
+# Evaluation against a random agent (5000 simulations)
+python3 evaluate.py --ai_agent dmc --model_path <SAVE_DIR>/<EXPERIMENT_ID>/model.tar --baseline_agent random --total_simulations 5000
+
+# Evaluation against a rule-based agent (5000 simulations)
+python3 evaluate.py --ai_agent dmc --model_path <SAVE_DIR>/<EXPERIMENT_ID>/model.tar --baseline_agent rule-based --total_simulations 5000
+
+# Evaluation against a human agent (need human interactions)
+python3 evaluate_human.py --ai_agent dmc --model_path <SAVE_DIR>/<EXPERIMENT_ID>/model.tar 
+
+```
+Demo example (agent vs human):
+
+<img src="figures/evaluate_human_demo.jpeg" width = "750" alt="card_code" align=center />
+
+
+### Application
+```shell
+# AI online gaming assistant
+python3 assist.py --ai_agent dmc --model_path <SAVE_DIR>/<EXPERIMENT_ID>/model.tar 
+```
+
+Demo example (AI agent helps online gaming):
+
+<img src="figures/assist_demo.JPG" width = "1000" alt="card_code" align=center />
+
+## 3. 方法概述
 
 我们学习并改编了[RLCard](https://rlcard.org)中斗地主AI的代码。这个游戏的状态空间、每局的路径长度等远远小于斗地主，所以实现起来相对容易一些。我们也因此调小了网络结构。[rlcard/envs/bailongmen.py](rlcard/envs/bailongmen.py)中实现了本游戏的模拟环境。[rlcard/games/bailongmen/game.py](rlcard/games/bailongmen/game.py)实现了本游戏相关的过程逻辑。[rlcard/agents](rlcard/agents)文件夹内为需要用到的agents，包括用于训练的 AI agent（目前只尝试了 Deep Monte Carlo）和用于评估的 [random agent](rlcard/agents/random_agent.py), [rule-based agent](rlcard/agents/rule_based_agent.py)，以及用于模拟人机对战的[human agent](rlcard/agents/human_agent.py)。
 
@@ -43,7 +83,17 @@
 - Epsilon-Greedy: exploration rate=0.01.
 
 
-## Agents
+## 4. 测试结果
+
+### Baseline agents
+
+**Random agent**: 每次采取随机动作的agent，用于与训练模型对战来评估当前模型强度。
+
+**Rule-based agent**: 采取一个由熟悉该游戏的专家（也就是我本人哈哈）编写的规则（一连串if语句）来选取动作。例如，一个比较常见的规则是：当手牌中同时有大小王时，先将一张放入己方私有区再将另一张放入公有区是比较好的策略。对于规则没有覆盖到的场景，算法对当前每一张手牌打分（基于与当前已有牌同花色、同颜色的情况）来选择出牌动作。
+
+- Rule-based agent 对战 Random agent的情况（基于1000场的模拟对局）：
+    - 先手：胜81.5%，负12.6%，平5.9%。平均每局净胜4.56分。
+    - 后手：胜84.7%，负11.2%，平4.1%。平均每局净胜4.94分。
 
 ### AI Agents
 
@@ -57,16 +107,3 @@
     - 后手：胜68.1%，负22.8%，平9.9%。平均每局净胜2.47分。
 - 对战游戏内官方AI（“鱼香肉丝”）的情况：手动10场对局中，8胜、1负、1平。
 - 对战作者本人（expert human agent）的情况：手动10场对局中，6胜、3负、1平。
-
-### Baseline agents
-
-#### Random agent
-每次采取随机动作的agent，用于与训练模型对战来评估当前模型强度。
-
-#### Rule-based agent
-采取一个由熟悉该游戏的专家（也就是我本人哈哈）编写的规则（一连串if语句）来选取动作。例如，一个比较常见的规则是：当手牌中同时有大小王时，先将一张放入己方私有区再将另一张放入公有区是比较好的策略。对于规则没有覆盖到的场景，算法对当前每一张手牌打分（基于与当前已有牌同花色、同颜色的情况）来选择出牌动作。
-
-- Rule-based agent 对战 Random agent的情况（基于1000场的模拟对局）：
-    - 先手：胜81.5%，负12.6%，平5.9%。平均每局净胜4.56分。
-    - 后手：胜84.7%，负11.2%，平4.1%。平均每局净胜4.94分。
-
